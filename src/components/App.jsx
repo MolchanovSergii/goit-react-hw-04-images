@@ -13,7 +13,6 @@ export const App = () => {
   const [page, setPage] = useState(1);
   const [images, setImages] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  // const [isEmpty, setIsEmpty] = useState(false);
   const [fetchImageLength, setFetchImageLength] = useState(0);
 
   useEffect(() => {
@@ -54,7 +53,6 @@ export const App = () => {
     setPage(1);
     setImages([]);
     setIsLoading(false);
-    // setIsEmpty(false);
     setFetchImageLength(0);
   };
 
