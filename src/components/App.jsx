@@ -1,4 +1,4 @@
-import { Component } from 'react';
+import { useState, useEffect } from 'react';
 import { Notify } from 'notiflix/build/notiflix-notify-aio';
 
 import fetchApi from '../../src/services/fetchApi';
@@ -8,76 +8,74 @@ import ImageGallery from './ImageGallery/ImageGallery';
 import LoadMoreButton from './Button/Button';
 import Loader from './Loader/Loader';
 
-export class App extends Component {
-  initialState = {
-    query: '',
-    page: 1,
-    images: [],
-    isLoading: false,
-    isEmpty: false,
-    fetchImageLength: 0,
-  };
+export const App = () => {
+  const [query, setQuery] = useState('');
+  const [page, setPage] = useState(1);
+  const [images, setImages] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  // const [isEmpty, setIsEmpty] = useState(false);
+  const [fetchImageLength, setFetchImageLength] = useState(0);
 
-  state = { ...this.initialState };
-
-  async componentDidUpdate(_, prevState) {
-    const { query, page, images } = this.state;
-
-    if (prevState.query !== query || prevState.page !== page) {
-      this.setState({ isLoading: true });
+  useEffect(() => {
+    const fetchData = async () => {
+      setIsLoading(true);
 
       try {
-        const fetchImage = await fetchApi(query, page);
-        if (!fetchImage.hits.length) {
+        const fetchedImages = await fetchApi(query, page);
+        if (!fetchedImages.hits.length) {
           Notify.warning(
             'No results were found for your search, please try something else.'
           );
         }
-        this.setState({
-          images: [...images, ...fetchImage.hits],
-          isLoading: false,
-          fetchImageLength: fetchImage.hits.length,
-        });
+        setImages(prevImages => [...prevImages, ...fetchedImages.hits]);
+        setFetchImageLength(fetchedImages.hits.length);
+        setIsLoading(false);
       } catch (error) {
-        this.setState({ isLoading: false });
-        Notify.failure(`Sorry something went wrong. ${error.message}`);
+        setIsLoading(false);
+        Notify.failure(`Sorry, something went wrong. ${error.message}`);
       }
-    }
-  }
+    };
 
-  handleSubmit = value => {
-    if (this.state.query === value) {
+    if (query !== '' && (query !== '' || page !== 1)) {
+      fetchData();
+    }
+  }, [query, page]);
+
+  const handleSubmit = value => {
+    if (query === value) {
       return;
     }
-    this.resetState();
-    this.setState({ query: value });
+    resetState();
+    setQuery(value);
   };
 
-  handleIncreasePage = () => {
-    this.setState(prevState => ({ page: prevState.page + 1 }));
+  const resetState = () => {
+    setQuery('');
+    setPage(1);
+    setImages([]);
+    setIsLoading(false);
+    // setIsEmpty(false);
+    setFetchImageLength(0);
+  };
+
+  const handleIncreasePage = () => {
+    setPage(prevPage => prevPage + 1);
     window.scrollBy({
       top: 300 * 3,
       behavior: 'smooth',
     });
   };
 
-  resetState = () => {
-    this.setState(this.initialState);
-  };
+  return (
+    <>
+      <StyledApp>
+        <SearchBar onSubmit={handleSubmit} />
+        {isLoading ? <Loader /> : <ImageGallery images={images} />}
 
-  render() {
-    const { images, isLoading, fetchImageLength } = this.state;
-    return (
-      <>
-        <StyledApp>
-          <SearchBar onSubmit={this.handleSubmit} />
-          {isLoading ? <Loader /> : <ImageGallery images={this.state.images} />}
-
-          {images.length > 0 && fetchImageLength === 12 && (
-            <LoadMoreButton onClick={this.handleIncreasePage} />
-          )}
-        </StyledApp>
-      </>
-    );
-  }
-}
+        {images.length > 0 && fetchImageLength === 12 && (
+          <LoadMoreButton onClick={handleIncreasePage} />
+        )}
+      </StyledApp>
+    </>
+  );
+};

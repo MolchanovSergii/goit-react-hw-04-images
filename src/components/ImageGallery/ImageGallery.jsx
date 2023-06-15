@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 
 import {
@@ -9,72 +9,57 @@ import {
 
 import Modal from 'components/Modal/Modal';
 
-class ImageGallery extends Component {
-  state = {
-    selectedImage: null,
-  };
+const ImageGallery = ({ images }) => {
+  const [selectedImage, setSelectedImage] = useState(null);
 
-  images = this.props.images;
+  useEffect(() => {
+    document.addEventListener('keydown', handleKeyDown);
 
-  componentDidMount() {
-    document.addEventListener('keydown', this.handleKeyDown);
-  }
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
 
-  componentWillUnmount() {
-    document.removeEventListener('keydown', this.handleKeyDown);
-  }
-
-  openModal = image => {
-    this.setState({
-      selectedImage: image,
-    });
+  const openModal = image => {
+    setSelectedImage(image);
     document.body.classList.add('modal-open');
   };
 
-  closeModal = () => {
-    this.setState({
-      selectedImage: null,
-    });
+  const closeModal = () => {
+    setSelectedImage(null);
     document.body.classList.remove('modal-open');
   };
 
-  handleKeyDown = event => {
+  const handleKeyDown = event => {
     if (event.keyCode === 27) {
-      this.closeModal();
+      closeModal();
     }
   };
 
-  render() {
-    const { selectedImage } = this.state;
+  return (
+    <div>
+      <StyledImageGallery>
+        {images.map(image => {
+          const { id, webformatURL, tags } = image;
+          return (
+            <StyledImageGalleryItem key={id} onClick={() => openModal(image)}>
+              <StyledItemImage src={webformatURL} alt={tags} />
+            </StyledImageGalleryItem>
+          );
+        })}
+      </StyledImageGallery>
 
-    return (
-      <div>
-        <StyledImageGallery>
-          {this.images.map(image => {
-            const { id, webformatURL, tags } = image;
-            return (
-              <StyledImageGalleryItem
-                key={id}
-                onClick={() => this.openModal(image)}
-              >
-                <StyledItemImage src={webformatURL} alt={tags} />
-              </StyledImageGalleryItem>
-            );
-          })}
-        </StyledImageGallery>
-
-        {selectedImage && (
-          <Modal
-            imgURL={selectedImage.largeImageURL}
-            alt={selectedImage.tags}
-            closeModal={this.closeModal}
-            onKeyDown={this.handleKeyDown}
-          />
-        )}
-      </div>
-    );
-  }
-}
+      {selectedImage && (
+        <Modal
+          imgURL={selectedImage.largeImageURL}
+          alt={selectedImage.tags}
+          closeModal={closeModal}
+          onKeyDown={handleKeyDown}
+        />
+      )}
+    </div>
+  );
+};
 
 export default ImageGallery;
 
