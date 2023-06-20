@@ -68,7 +68,7 @@ export const App = () => {
     <>
       <StyledApp>
         <SearchBar onSubmit={handleSubmit} />
-        {isLoading ? <Loader /> : <ImageGallery images={images} />}
+        {/* {isLoading ? <Loader /> : <ImageGallery images={images} />} */}
 
         {images.length > 0 && fetchImageLength === 12 && (
           <LoadMoreButton onClick={handleIncreasePage} />
